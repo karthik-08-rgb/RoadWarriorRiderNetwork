@@ -73,7 +73,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const { data: existing } = await supabase
       .from('riders')
-      .select('id,name,referral_code')
+      .select('id,name,referral_code,qr_code_url,total_points,referral_count')
       .eq('phone', body.phone)
       .maybeSingle();
 
