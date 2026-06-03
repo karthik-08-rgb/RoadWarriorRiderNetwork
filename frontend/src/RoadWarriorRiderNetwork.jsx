@@ -590,16 +590,24 @@ function SurveyPage({ lang, setPage, t }) {
             : null
       };
 
-      const result = await registerRider(payload);
+    const result = await registerRider(payload);
 
-      if (result.error === "already_registered") {
-        setExistingRider(result.rider);
-        setSubmitted(true);
-        return;
-      }
+    console.log("Registration API Response:", result);
 
-      setNewRider(result.rider);
+    if (result.error === "already_registered") {
+      setExistingRider(result.rider);
       setSubmitted(true);
+      return;
+    }
+
+    if (!result.rider) {
+      console.error("No rider returned:", result);
+      alert("Registration failed");
+      return;
+    }
+
+    setNewRider(result.rider);
+    setSubmitted(true);
     } catch (err) {
       console.error(err);
       alert("Registration failed");
