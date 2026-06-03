@@ -665,6 +665,33 @@ function SurveyPage({ lang, setPage, t }) {
               style={{ width: "100%", background: copied ? "#22c55e" : "#f97316", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "background 0.3s" }}>
               {copied ? `✓ ${t.copied}` : `📋 ${t.copyCode}`}
             </button>
+            <button
+              onClick={() => {
+                const message = encodeURIComponent(
+                  `Welcome! I have joined Road Warrior Rider Network.
+
+            My referral code is ${rider.referral_code}.
+
+            Join using my referral code and earn rewards!`
+                );
+
+                window.open(
+                  `https://wa.me/?text=${message}`,
+                  "_blank"
+                );
+              }}
+              style={{
+                background: "#25D366",
+                color: "#fff",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                marginTop: "16px"
+              }}
+            >
+              Share on WhatsApp
+            </button>
           </div>
 
           {/* Score Summary */}
