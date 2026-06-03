@@ -177,23 +177,24 @@ router.post('/', async (req: Request, res: Response) => {
       })
       .eq('id', rider.id);
 
-    const lang = body.language || 'en';
+    // const lang = body.language || 'en';
 
-    const msgFn =
-      WA_MESSAGES[lang] || WA_MESSAGES.en;
+    // const msgFn =
+    //   WA_MESSAGES[lang] || WA_MESSAGES.en;
 
-    try {
-      await twilioClient.messages.create({
-        from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-        to: `whatsapp:+91${body.phone}`,
-        body: msgFn(body.name, code)
-      });
-    } catch (waErr) {
-      console.error(
-        'WhatsApp send failed:',
-        waErr
-      );
-    }
+    // try {
+    //   await twilioClient.messages.create({
+    //     from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+    //     to: `whatsapp:+91${body.phone}`,
+    //     body: msgFn(body.name, code)
+    //   });
+    // } catch (waErr) {
+    //   console.error(
+    //     'WhatsApp send failed:',
+    //     waErr
+    //   );
+    // }
+    console.log("WhatsApp disabled for testing");
 
     await supabase
       .from('points_history')
