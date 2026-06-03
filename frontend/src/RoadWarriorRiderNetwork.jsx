@@ -923,8 +923,11 @@ function AdminDashboard({ setPage, t }) {
 
   const [riders, setRiders] = useState([]);
 
+  const API_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:4000";
   useEffect(() => {
-    fetch("http://localhost:4000/api/admin/riders")
+    fetch(`${API_URL}/api/admin/riders`)
       .then((res) => res.json())
       .then((data) => setRiders(data))
       .catch((err) => console.error(err));
@@ -969,7 +972,7 @@ function AdminDashboard({ setPage, t }) {
             onClick={async () => {
               try {
                 const response = await fetch(
-                  "http://localhost:4000/api/admin/login",
+                  `${API_URL}/api/admin/login`,
                   {
                     method: "POST",
                     headers: {
