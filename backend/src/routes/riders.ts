@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { supabase } from '../lib/supabase';
 import QRCode from 'qrcode';
-import twilio from 'twilio';
+// import twilio from 'twilio';
 
 const router = Router();
 
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID || '',
-  process.env.TWILIO_AUTH_TOKEN || ''
-);
+// const twilioClient = twilio(
+//   process.env.TWILIO_ACCOUNT_SID || '',
+//   process.env.TWILIO_AUTH_TOKEN || ''
+// );
 
 function generateCode(): string {
   return 'RW-' + Math.floor(1000 + Math.random() * 9000);
@@ -121,6 +121,7 @@ router.post('/', async (req: Request, res: Response) => {
       .insert({
         name: body.name,
         phone: body.phone,
+        email: body.email,
         city: body.city,
         language: body.language || 'en',
         platform: body.platform,
@@ -194,7 +195,7 @@ router.post('/', async (req: Request, res: Response) => {
     //     waErr
     //   );
     // }
-    console.log("WhatsApp disabled for testing");
+    // console.log("WhatsApp disabled for testing");
 
     await supabase
       .from('points_history')

@@ -1,3 +1,4 @@
+import emailjs from "@emailjs/browser";
 import { registerRider, getScore } from "./services/api";
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -33,6 +34,7 @@ const T = {
     fullName: "Full Name",
     whatsapp: "WhatsApp Number",
     city: "City",
+    email: "Email",
     platform: "Delivery Platform",
     experience: "Years of Experience",
     // Section B
@@ -104,6 +106,7 @@ const T = {
     sectionA: "बेसिक प्रोफाइल",
     fullName: "पूरा नाम",
     whatsapp: "WhatsApp नंबर",
+    email: "ईमेल",
     city: "शहर",
     platform: "डिलीवरी प्लेटफॉर्म",
     experience: "अनुभव (वर्षों में)",
@@ -168,6 +171,7 @@ const T = {
     sectionA: "ಮೂಲ ಪ್ರೊಫೈಲ್",
     fullName: "ಪೂರ್ಣ ಹೆಸರು",
     whatsapp: "WhatsApp ಸಂಖ್ಯೆ",
+    email: "ಇಮೇಲ್",
     city: "ನಗರ",
     platform: "ಡೆಲಿವರಿ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್",
     experience: "ಅನುಭವ (ವರ್ಷಗಳು)",
@@ -516,7 +520,7 @@ function SurveyPage({ lang, setPage, t }) {
   const [copied, setCopied] = useState(false);
 
   const [form, setForm] = useState({
-    name: "", phone: "", city: "", platform: "", experience: "",
+    name: "", phone: "", email: "", city: "", platform: "", experience: "",
     vehicleType: "", vehicleModel: "", fuelingMethod: "", weeklyCost: "", maintenanceCost: "",
     generalChallenges: [], evChallenges: [], petrolChallenges: [],
     accidentalIns: null, healthIns: null, accidentExpense: null,
@@ -559,6 +563,7 @@ function SurveyPage({ lang, setPage, t }) {
       const payload = {
         name: form.name,
         phone: form.phone,
+        email: form.email,
         city: form.city,
         language: lang,
 
@@ -607,6 +612,22 @@ function SurveyPage({ lang, setPage, t }) {
     }
 
     setNewRider(result.rider);
+    try {
+      await emailjs.send(
+        "service_hdapbyv",
+        "template_t4miotd",
+        {
+          name: result.rider.name,
+          referral_code: result.rider.referral_code,
+          email: result.rider.email
+        },
+        "E4w_0PxfxIA8dghv6"
+      );
+
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Email send failed:", error);
+    }
     setSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -665,33 +686,6 @@ function SurveyPage({ lang, setPage, t }) {
               style={{ width: "100%", background: copied ? "#22c55e" : "#f97316", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "background 0.3s" }}>
               {copied ? `✓ ${t.copied}` : `📋 ${t.copyCode}`}
             </button>
-            <button
-              onClick={() => {
-                const message = encodeURIComponent(
-                  `Welcome! I have joined Road Warrior Rider Network.
-
-            My referral code is ${rider.referral_code}.
-
-            Join using my referral code and earn rewards!`
-                );
-
-                window.open(
-                  `https://wa.me/?text=${message}`,
-                  "_blank"
-                );
-              }}
-              style={{
-                background: "#25D366",
-                color: "#fff",
-                border: "none",
-                padding: "12px 20px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                marginTop: "16px"
-              }}
-            >
-              Share on WhatsApp
-            </button>
           </div>
 
           {/* Score Summary */}
@@ -740,6 +734,13 @@ function SurveyPage({ lang, setPage, t }) {
           <>
             <Input label={t.fullName} value={form.name} onChange={v => set("name", v)} placeholder="e.g. Rahul Kumar" required error={errors.name} />
             <Input label={t.whatsapp} type="tel" value={form.phone} onChange={v => set("phone", v)} placeholder="10-digit number" required error={errors.phone} />
+            <Input
+              label={t.email}
+              type="email"
+              value={form.email}
+              onChange={(v) => set("email", v)}
+              placeholder="Enter Email"
+            />
             <Select label={t.city} value={form.city} onChange={v => set("city", v)} options={CITIES} required error={errors.city} />
             <Select label={t.platform} value={form.platform} onChange={v => set("platform", v)} options={PLATFORMS} required error={errors.platform} />
             <Input label={t.experience} type="number" value={form.experience} onChange={v => set("experience", v)} placeholder="e.g. 3" required error={errors.experience} />

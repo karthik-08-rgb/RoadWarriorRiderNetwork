@@ -4,6 +4,7 @@ CREATE TABLE riders (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name             TEXT NOT NULL,
   phone            TEXT NOT NULL UNIQUE,
+  email            TEXT,
   city             TEXT NOT NULL,
   language         TEXT NOT NULL DEFAULT 'en',
   platform         TEXT NOT NULL,
