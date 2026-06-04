@@ -25,7 +25,7 @@ router.get('/riders', adminAuth, async (_req, res) => {
     const { data, error } = await supabase
       .from('riders')
       .select('*')
-      .eq('is_active', true)
+      // .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -41,6 +41,7 @@ router.get('/riders', adminAuth, async (_req, res) => {
 // ── DELETE /api/admin/riders/:id ──────────────────────────────────────────────
 // Protected – soft-deletes a rider by setting is_active = false.
 // The rider's referral code, points, and history are preserved for data integrity.
+// ── DELETE /api/admin/riders/:id ──────────────────────────────────────────────
 router.delete('/riders/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
 
@@ -49,7 +50,7 @@ router.delete('/riders/:id', adminAuth, async (req, res) => {
   }
 
   try {
-    // Confirm rider exists and is still active before acting
+    // Confirm rider exists
     const { data: existing, error: fetchErr } = await supabase
       .from('riders')
       .select('id, name, is_active')
@@ -64,26 +65,38 @@ router.delete('/riders/:id', adminAuth, async (req, res) => {
       return res.status(404).json({ error: 'Rider not found' });
     }
 
-    if (existing.is_active === false) {
-      return res.status(409).json({ error: 'Rider is already inactive' });
+    // Delete rider's points history first
+    const { error: historyErr } = await supabase
+      .from('points_history')
+      .delete()
+      .eq('rider_id', id);
+
+    if (historyErr) {
+      return res.status(500).json({
+        error: historyErr.message
+      });
     }
 
-    // Soft-delete: flip is_active to false
-    const { error: updateErr } = await supabase
+    // Hard delete rider
+    const { error: deleteErr } = await supabase
       .from('riders')
-      .update({ is_active: false })
+      .delete()
       .eq('id', id);
 
-    if (updateErr) {
-      return res.status(500).json({ error: updateErr.message });
+    if (deleteErr) {
+      return res.status(500).json({
+        error: deleteErr.message
+      });
     }
 
     return res.json({
       success: true,
-      message: `Rider "${existing.name}" has been deactivated`
+      message: `Rider "${existing.name}" has been deleted`
     });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message
+    });
   }
 });
 

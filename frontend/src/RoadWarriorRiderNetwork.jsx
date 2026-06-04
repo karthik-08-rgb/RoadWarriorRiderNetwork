@@ -1204,7 +1204,7 @@ function AdminDashboard({ setPage, t }) {
               {confirmDelete.name} · {confirmDelete.phone}
             </p>
             <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 24px", lineHeight: 1.5 }}>
-              This will deactivate the rider. Their referral history and points are preserved.
+              This rider will be permanently deleted from the database.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button

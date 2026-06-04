@@ -71,17 +71,24 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const body = req.body;
 
-    const { data: existing } = await supabase
+    const { data: existingPhone } = await supabase
       .from('riders')
       .select('id,name,referral_code,qr_code_url,total_points,referral_count')
       .eq('phone', body.phone)
-      .eq('is_active', true)   // ← deactivated riders can re-register
+      // .eq('is_active', true)   // ← deactivated riders can re-register
       .maybeSingle();
 
-    if (existing) {
+    const { data: existingEmail } = await supabase
+      .from('riders')
+      .select('id')
+      .eq('email', body.email)
+      // .eq('is_active', true) 
+      .maybeSingle();
+
+    if (existingPhone || existingEmail) {
       return res.status(409).json({
-        error: 'already_registered',
-        rider: existing
+        error: 'already_registered'
+        // rider: existing
       });
     }
 
@@ -108,7 +115,7 @@ router.post('/', async (req: Request, res: Response) => {
         .from('riders')
         .select('id')
         .eq('referral_code', body.referral_code)
-        .eq('is_active', true)   // ← inactive riders cannot refer new signups
+        // .eq('is_active', true)   // ← inactive riders cannot refer new signups
         .maybeSingle();
 
       if (ref) {
@@ -151,8 +158,8 @@ router.post('/', async (req: Request, res: Response) => {
         referred_by: referrerId,
         total_points: 10,
         referral_count: 0,
-        rider_segment: segment,
-        is_active: true
+        rider_segment: segment
+        // is_active: true
       })
       .select()
       .single();
