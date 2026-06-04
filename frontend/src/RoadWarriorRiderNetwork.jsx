@@ -736,6 +736,7 @@ function SurveyPage({ lang, setPage, t }) {
             <Input label={t.whatsapp} type="tel" value={form.phone} onChange={v => set("phone", v)} placeholder="10-digit number" required error={errors.phone} />
             <Input
               label={t.email}
+              required
               type="email"
               value={form.email}
               onChange={(v) => set("email", v)}
