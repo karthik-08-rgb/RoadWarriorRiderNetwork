@@ -66,10 +66,13 @@ router.delete('/riders/:id', adminAuth, async (req, res) => {
     }
 
     // Delete rider's points history first
+    console.log("Deleting rider:", id);
+
     const { error: historyErr } = await supabase
       .from('points_history')
       .delete()
       .eq('rider_id', id);
+    console.log("History delete error:", historyErr);
 
     if (historyErr) {
       return res.status(500).json({
