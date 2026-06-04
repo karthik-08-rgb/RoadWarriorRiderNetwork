@@ -75,6 +75,7 @@ router.post('/', async (req: Request, res: Response) => {
       .from('riders')
       .select('id,name,referral_code,qr_code_url,total_points,referral_count')
       .eq('phone', body.phone)
+      .eq('is_active', true)   // ← deactivated riders can re-register
       .maybeSingle();
 
     if (existing) {
@@ -107,6 +108,7 @@ router.post('/', async (req: Request, res: Response) => {
         .from('riders')
         .select('id')
         .eq('referral_code', body.referral_code)
+        .eq('is_active', true)   // ← inactive riders cannot refer new signups
         .maybeSingle();
 
       if (ref) {
@@ -149,7 +151,8 @@ router.post('/', async (req: Request, res: Response) => {
         referred_by: referrerId,
         total_points: 10,
         referral_count: 0,
-        rider_segment: segment
+        rider_segment: segment,
+        is_active: true
       })
       .select()
       .single();

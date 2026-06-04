@@ -8,7 +8,9 @@ router.get('/:phone', async (req, res) => {
   const { data: rider } = await supabase
     .from('riders')
     .select('name,referral_code,total_points,referral_count,rider_segment,city,platform')
-    .eq('phone', req.params.phone).single();
+    .eq('phone', req.params.phone)
+    .eq('is_active', true)   // ← inactive riders get a 404 on /score
+    .single();
   if (!rider) return res.status(404).json({ error: 'not_found' });
 
   const milestones = [

@@ -951,15 +951,36 @@ function AdminDashboard({ setPage, t }) {
 
   const [riders, setRiders] = useState([]);
 
+  // Delete feature state
+  const [confirmDelete, setConfirmDelete] = useState(null); // rider object | null
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [toast, setToast] = useState(null); // { type: "success"|"error", msg } | null
+
+  const showToast = (type, msg) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   const API_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "http://localhost:4000";
+
+  // Fetch only active riders using admin password header
+  const fetchRiders = async (password = adminPassword) => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/riders`, {
+        headers: { "x-admin-password": password }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setRiders(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    fetch(`${API_URL}/api/admin/riders`)
-      .then((res) => res.json())
-      .then((data) => setRiders(data))
-      .catch((err) => console.error(err));
-  }, []);
+    if (authenticated) fetchRiders();
+  }, [authenticated]);
 
   if (!authenticated) {
     return (
@@ -1041,6 +1062,30 @@ function AdminDashboard({ setPage, t }) {
       </div>
     );
   }
+
+  // ── Soft-delete handler ───────────────────────────────────
+  const handleDeleteConfirmed = async () => {
+    if (!confirmDelete) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/riders/${confirmDelete.id}`, {
+        method: "DELETE",
+        headers: { "x-admin-password": adminPassword }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRiders(prev => prev.filter(r => r.id !== confirmDelete.id));
+        showToast("success", `✅ ${confirmDelete.name} has been removed.`);
+      } else {
+        showToast("error", `❌ ${data.error || "Delete failed. Please try again."}`);
+      }
+    } catch (err) {
+      showToast("error", "❌ Network error. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDelete(null);
+    }
+  };
 
   // const riders = DB.riders;
   const filtered = riders.filter(r => {
@@ -1127,6 +1172,60 @@ function AdminDashboard({ setPage, t }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb" }}>
+
+      {/* ── Toast notification ── */}
+      {toast && (
+        <div style={{
+          position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)",
+          zIndex: 9999, background: toast.type === "success" ? "#ecfdf5" : "#fef2f2",
+          border: `1px solid ${toast.type === "success" ? "#6ee7b7" : "#fca5a5"}`,
+          color: toast.type === "success" ? "#065f46" : "#991b1b",
+          borderRadius: 12, padding: "12px 20px", fontSize: 14, fontWeight: 600,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.12)", maxWidth: 360, textAlign: "center"
+        }}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* ── Delete confirmation modal ── */}
+      {confirmDelete && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9000, padding: "0 20px"
+        }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: "28px 24px", maxWidth: 360, width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#111", margin: "0 0 8px" }}>Delete Rider?</h3>
+            <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 6px", lineHeight: 1.5 }}>
+              Are you sure you want to delete this rider?
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: "0 0 20px" }}>
+              {confirmDelete.name} · {confirmDelete.phone}
+            </p>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 24px", lineHeight: 1.5 }}>
+              This will deactivate the rider. Their referral history and points are preserved.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleteLoading}
+                style={{ flex: 1, padding: "12px", background: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirmed}
+                disabled={deleteLoading}
+                style={{ flex: 1, padding: "12px", background: deleteLoading ? "#fca5a5" : "#ef4444", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: deleteLoading ? "not-allowed" : "pointer", color: "#fff" }}
+              >
+                {deleteLoading ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ background: "#111", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1306,7 +1405,22 @@ function AdminDashboard({ setPage, t }) {
                     <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{r.name}</div>
                     <div style={{ fontSize: 12, color: "#9ca3af" }}>{r.phone} · {r.city}</div>
                   </div>
-                  <SegmentBadge segment={r.rider_segment} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                    <SegmentBadge segment={r.rider_segment} />
+                    <button
+                      onClick={() => setConfirmDelete(r)}
+                      title="Delete rider"
+                      style={{
+                        background: "#fef2f2", border: "1.5px solid #fca5a5", color: "#dc2626",
+                        borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 700,
+                        cursor: "pointer", flexShrink: 0
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "#ef4444"; e.currentTarget.style.color = "#fff"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.color = "#dc2626"; }}
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#6b7280" }}>
                   <span>🏍️ {r.vehicle_type?.split(" ")[0]}</span>
